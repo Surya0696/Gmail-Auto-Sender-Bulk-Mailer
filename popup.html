@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gmail Auto Sender</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body class="dark-theme">
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand">
+        <svg class="brand-icon" viewBox="0 0 24 24" width="22" height="22">
+          <path fill="currentColor" d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+        </svg>
+        <span class="brand-title">Gmail Auto Sender</span>
+      </div>
+      <div class="header-actions">
+        <span id="statusBadge" class="status-pill idle">IDLE</span>
+        <button id="themeToggleBtn" class="icon-btn" title="Toggle Light/Dark Theme">
+          <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18"><path fill="currentColor" d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zM2 13h2c.55 0 1-.45 1-1s-.45-1-1-1H2c-.55 0-1 .45-1 1s.45 1 1 1zm18 0h2c.55 0 1-.45 1-1s-.45-1-1-1h-2c-.55 0-1 .45-1 1s.45 1 1 1zM11 2v2c0 .55.45 1 1 1s1-.45 1-1V2c0-.55-.45-1-1-1s-1 .45-1 1zm0 18v2c0 .55.45 1 1 1s1-.45 1-1v-2c0-.55-.45-1-1-1s-1 .45-1 1z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="app-tabs">
+      <button class="tab-btn active" data-tab="campaignTab">
+        <span>Campaign</span>
+      </button>
+      <button class="tab-btn" data-tab="logsTab">
+        <span>Failed & Logs</span>
+      </button>
+      <button class="tab-btn" data-tab="settingsTab">
+        <span>Settings</span>
+      </button>
+    </nav>
+
+    <!-- Main Content Panels -->
+    <main class="app-content">
+
+      <!-- TAB 1: CAMPAIGN -->
+      <section id="campaignTab" class="tab-panel active">
+        
+        <!-- CSV Upload Box -->
+        <div class="card upload-card">
+          <div class="card-header">
+            <span class="card-title">1. Recipient List (CSV)</span>
+          </div>
+          <div id="dropZone" class="drop-zone">
+            <input type="file" id="csvFileInput" accept=".csv" class="file-input">
+            <div class="drop-zone-content">
+              <svg viewBox="0 0 24 24" width="32" height="32" class="upload-icon">
+                <path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+              </svg>
+              <p class="drop-text">Drag & drop CSV here or <span class="browse-link">browse</span></p>
+              <p class="drop-subtext">Supports <code>email</code> and <code>name</code> headers</p>
+            </div>
+          </div>
+          <div id="fileInfoChip" class="file-info-chip hidden">
+            <div class="file-details">
+              <span id="fileName" class="file-name">recipients.csv</span>
+              <span id="fileMetrics" class="file-metrics">0 valid emails</span>
+            </div>
+            <button id="removeFileBtn" class="icon-btn-sm" title="Remove file">&times;</button>
+          </div>
+        </div>
+
+        <!-- Compose Email Content Card -->
+        <div class="card compose-card">
+          <div class="card-header">
+            <span class="card-title">2. Email Content</span>
+            <div class="header-buttons">
+              <button id="previewBtn" class="btn-secondary-sm">👁 Preview</button>
+              <button id="testSendBtn" class="btn-secondary-sm">🧪 Test Send</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="subjectInput">Subject</label>
+            <input type="text" id="subjectInput" placeholder="Application for {{role}} - {{name}}" class="text-input">
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="bodyInput">Message Body</label>
+              <div class="placeholder-chips">
+                <span class="chip" data-tag="{{name}}">+ {{name}}</span>
+                <span class="chip" data-tag="{{email}}">+ {{email}}</span>
+              </div>
+            </div>
+            <textarea id="bodyInput" rows="5" placeholder="Hello {{name}},&#10;&#10;Please find attached my resume for your consideration.&#10;&#10;Best regards," class="textarea-input"></textarea>
+          </div>
+        </div>
+
+        <!-- Attachment / Resume Card -->
+        <div class="card attachment-card">
+          <div class="card-header">
+            <span class="card-title">3. Attach Resume / Document (Optional)</span>
+          </div>
+          <div id="attachmentUploadBox" class="attachment-upload-box">
+            <input type="file" id="resumeFileInput" accept=".pdf,.doc,.docx,.txt,.rtf" class="file-input">
+            <div class="attachment-drop-content">
+              <svg viewBox="0 0 24 24" width="22" height="22" class="attach-icon">
+                <path fill="currentColor" d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+              </svg>
+              <span class="attach-text">Attach Resume (PDF, DOCX, etc.)</span>
+            </div>
+          </div>
+          <div id="attachmentInfoChip" class="file-info-chip hidden">
+            <div class="file-details">
+              <span id="attachmentName" class="file-name">Resume.pdf</span>
+              <span id="attachmentSize" class="file-metrics">0 KB</span>
+            </div>
+            <button id="removeAttachmentBtn" class="icon-btn-sm" title="Remove attachment">&times;</button>
+          </div>
+        </div>
+
+        <!-- Progress & Live Dashboard Card -->
+        <div class="card progress-card">
+          <div class="card-header">
+            <span class="card-title">4. Live Progress</span>
+            <span id="estTimeText" class="est-time">Est. Time: --:--</span>
+          </div>
+
+          <div class="progress-bar-container">
+            <div id="progressBar" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <span class="metric-value" id="sentCountText">0</span>
+              <span class="metric-label">✔ Sent</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-value" id="remainingCountText">0</span>
+              <span class="metric-label">⏳ Remaining</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-value" id="failedCountText">0</span>
+              <span class="metric-label">❌ Failed</span>
+            </div>
+          </div>
+
+          <div class="current-recipient-row">
+            <div class="current-info-group">
+              <span class="current-label">Current:</span>
+              <span id="currentRecipientText" class="current-value">None</span>
+            </div>
+            <span id="copyrightNotice" class="copyright-notice">© August 2026 - Surya P R. All rights reserved.</span>
+          </div>
+
+          <!-- Quick Failed Actions Row -->
+          <div id="failedActionsRow" class="failed-actions-row hidden">
+            <button id="viewFailedListBtn" class="btn-secondary-sm btn-danger-sm">📋 View Failed Mail List</button>
+            <button id="campaignRetryFailedBtn" class="btn-secondary-sm btn-warning-sm">🔄 Retry Failed Emails</button>
+          </div>
+        </div>
+
+        <!-- Control Action Bar -->
+        <div class="action-bar">
+          <button id="startBtn" class="btn btn-primary">🚀 Start Sending</button>
+          <button id="pauseBtn" class="btn btn-warning hidden">⏸ Pause</button>
+          <button id="resumeBtn" class="btn btn-info hidden">▶ Resume</button>
+          <button id="stopBtn" class="btn btn-danger hidden">⏹ Stop</button>
+        </div>
+
+      </section>
+
+      <!-- TAB 2: FAILED MAIL LIST & LOGS -->
+      <section id="logsTab" class="tab-panel">
+        
+        <!-- Dedicated Failed Mail List Card -->
+        <div class="card failed-list-card">
+          <div class="card-header">
+            <span class="card-title" style="color:var(--danger-color)">Failed Mail List (<span id="failedListCount">0</span>)</span>
+            <div class="header-buttons">
+              <button id="exportFailedLogsBtn" class="btn-secondary-sm btn-danger-sm">📥 Download CSV</button>
+              <button id="retryFailedBtn" class="btn-secondary-sm btn-warning-sm">🔄 Retry</button>
+            </div>
+          </div>
+          
+          <div class="failed-table-container">
+            <table class="failed-table">
+              <thead>
+                <tr>
+                  <th>Recipient Email</th>
+                  <th>Failure Reason</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="failedTableBody">
+                <tr><td colspan="3" class="empty-log">No failed emails in this campaign.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- All Events History Section -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">All Event Activity</span>
+            <div class="toolbar-actions">
+              <button id="exportLogsBtn" class="btn-secondary-sm">📥 Export All</button>
+              <button id="clearLogsBtn" class="btn-secondary-sm">🗑 Clear</button>
+            </div>
+          </div>
+
+          <div class="logs-toolbar">
+            <select id="logFilterSelect" class="select-input">
+              <option value="ALL">All Event Types</option>
+              <option value="failed">❌ Failed Only</option>
+              <option value="sent">✔ Sent Only</option>
+              <option value="skipped">⏳ Skipped/Waiting</option>
+            </select>
+          </div>
+
+          <div class="logs-container">
+            <ul id="logsList" class="logs-list">
+              <li class="empty-log">No campaign events logged yet.</li>
+            </ul>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- TAB 3: SETTINGS -->
+      <section id="settingsTab" class="tab-panel">
+        <div class="card settings-card">
+          <div class="card-header">
+            <span class="card-title">Campaign & Safety Settings</span>
+          </div>
+
+          <div class="form-group">
+            <label for="dailyLimitInput">Daily Send Limit</label>
+            <input type="number" id="dailyLimitInput" min="1" max="2000" value="500" class="text-input">
+            <span class="input-hint">Safety cap to prevent Gmail account flag</span>
+          </div>
+
+          <div class="form-group">
+            <label for="delayPresetSelect">Random Delay Interval</label>
+            <select id="delayPresetSelect" class="select-input">
+              <option value="10-15">10 - 15 Seconds (Fast)</option>
+              <option value="15-25" selected>15 - 25 Seconds (Recommended)</option>
+              <option value="20-40">20 - 40 Seconds (Conservative)</option>
+              <option value="custom">Custom Interval</option>
+            </select>
+          </div>
+
+          <div id="customDelayRow" class="custom-delay-row hidden">
+            <div class="form-group-half">
+              <label for="minDelayInput">Min Delay (s)</label>
+              <input type="number" id="minDelayInput" min="5" value="15" class="text-input">
+            </div>
+            <div class="form-group-half">
+              <label for="maxDelayInput">Max Delay (s)</label>
+              <input type="number" id="maxDelayInput" min="5" value="25" class="text-input">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="retryCountInput">Retry Failed Email</label>
+            <select id="retryCountInput" class="select-input">
+              <option value="0">0 Retries</option>
+              <option value="1" selected>1 Retry</option>
+              <option value="2">2 Retries</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="signatureInput">Default Signature</label>
+            <textarea id="signatureInput" rows="3" placeholder="Best regards,&#10;Your Name" class="textarea-input"></textarea>
+          </div>
+
+          <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Email Preview (Recipient #1)</h3>
+          <button id="closePreviewBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="preview-field">
+            <span class="preview-label">To:</span>
+            <span id="previewTo" class="preview-val">demo@example.com</span>
+          </div>
+          <div class="preview-field">
+            <span class="preview-label">Subject:</span>
+            <span id="previewSubject" class="preview-val">Subject text</span>
+          </div>
+          <div class="preview-field" id="previewAttachmentRow">
+            <span class="preview-label">Attachment:</span>
+            <span id="previewAttachmentVal" class="preview-val">None</span>
+          </div>
+          <div class="preview-body-container">
+            <span class="preview-label">Body:</span>
+            <div id="previewBody" class="preview-body-box">Body content...</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="closePreviewModalBtn" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Test Send Modal -->
+    <div id="testSendModal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Send Test Email</h3>
+          <button id="closeTestModalBtn" class="close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">Send a sample test email to verify formatting and resume attachment before starting the bulk campaign.</p>
+          <div class="form-group">
+            <label for="testEmailInput">Target Test Email Address</label>
+            <input type="email" id="testEmailInput" placeholder="your-email@gmail.com" class="text-input">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="cancelTestModalBtn" class="btn btn-secondary">Cancel</button>
+          <button id="confirmTestSendBtn" class="btn btn-primary">Send Test</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast" class="toast hidden">
+      <span id="toastMessage">Notification message</span>
+    </div>
+
+  </div>
+
+  <script src="utils.js"></script>
+  <script src="csvParser.js"></script>
+  <script src="storage.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
