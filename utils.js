@@ -9,7 +9,7 @@
  * @returns {boolean} True if the email is valid, false otherwise.
  */
 function validateEmail(email) {
-  if (!email || typeof email !== 'string') return false;
+  if (!email || typeof email !== "string") return false;
   const cleanEmail = email.trim();
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   return emailRegex.test(cleanEmail);
@@ -43,12 +43,12 @@ function getRandomDelay(minSec, maxSec) {
  * @returns {string} Formatted time string.
  */
 function formatTime(seconds) {
-  if (isNaN(seconds) || seconds <= 0) return '00:00';
+  if (isNaN(seconds) || seconds <= 0) return "00:00";
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
 
-  const pad = (num) => String(num).padStart(2, '0');
+  const pad = (num) => String(num).padStart(2, "0");
 
   if (hrs > 0) {
     return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
@@ -64,7 +64,7 @@ function formatTime(seconds) {
  * @returns {string} Human readable formatted time string (e.g. "05:30" or "01:15:20").
  */
 function estimateRemainingTime(remainingCount, minDelaySec, maxDelaySec) {
-  if (!remainingCount || remainingCount <= 0) return '00:00';
+  if (!remainingCount || remainingCount <= 0) return "00:00";
   const avgDelaySec = (Number(minDelaySec) + Number(maxDelaySec)) / 2;
   const totalSeconds = remainingCount * avgDelaySec;
   return formatTime(totalSeconds);
@@ -76,11 +76,11 @@ function estimateRemainingTime(remainingCount, minDelaySec, maxDelaySec) {
  * @returns {string} Formatted file size.
  */
 function formatFileSize(bytes) {
-  if (!bytes || isNaN(bytes) || bytes === 0) return '0 B';
+  if (!bytes || isNaN(bytes) || bytes === 0) return "0 B";
   const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const sizes = ["B", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 /**
@@ -94,9 +94,9 @@ function fileToBase64Payload(file) {
     reader.onload = () => {
       resolve({
         fileName: file.name,
-        fileType: file.type || 'application/octet-stream',
+        fileType: file.type || "application/octet-stream",
         fileSize: file.size,
-        base64Data: reader.result
+        base64Data: reader.result,
       });
     };
     reader.onerror = (error) => reject(error);
@@ -111,16 +111,18 @@ function fileToBase64Payload(file) {
  */
 function base64PayloadToFile(payload) {
   if (!payload || !payload.base64Data) return null;
-  const arr = payload.base64Data.split(',');
+  const arr = payload.base64Data.split(",");
   const mimeMatch = arr[0].match(/:(.*?);/);
-  const mime = mimeMatch ? mimeMatch[1] : (payload.fileType || 'application/octet-stream');
+  const mime = mimeMatch
+    ? mimeMatch[1]
+    : payload.fileType || "application/octet-stream";
   const bstr = atob(arr[1]);
   let n = bstr.length;
   const u8arr = new Uint8Array(n);
   while (n--) {
     u8arr[n] = bstr.charCodeAt(n);
   }
-  return new File([u8arr], payload.fileName || 'attachment', { type: mime });
+  return new File([u8arr], payload.fileName || "attachment", { type: mime });
 }
 
 /**
@@ -133,40 +135,47 @@ function base64PayloadToFile(payload) {
  * @param {string} [defaultSignature=''] - Optional signature to append to body.
  * @returns {string} Interpolated text.
  */
-function renderTemplate(template, rowData = {}, defaultSignature = '') {
-  if (!template || typeof template !== 'string') return '';
+function renderTemplate(template, rowData = {}, defaultSignature = "") {
+  if (!template || typeof template !== "string") return "";
 
   let result = template;
   const row = rowData || {};
 
   // Case-insensitive key lookup helper
   const getValue = (key) => {
-    if (!key) return '';
+    if (!key) return "";
     const targetKey = key.trim().toLowerCase();
     for (const [k, v] of Object.entries(row)) {
-      if (k.trim().toLowerCase() === targetKey && v !== undefined && v !== null) {
+      if (
+        k.trim().toLowerCase() === targetKey &&
+        v !== undefined &&
+        v !== null
+      ) {
         return String(v).trim();
       }
     }
-    return '';
+    return "";
   };
 
-  const nameVal = getValue('name');
+  const nameVal = getValue("name");
 
   // Handle missing name fallback logic specifically for "Hello {{name}}" / "Hi {{name}}"
   if (!nameVal) {
-    result = result.replace(/Hello\s+\{\{\s*name\s*\}\}/gi, 'Hello,');
-    result = result.replace(/Hi\s+\{\{\s*name\s*\}\}/gi, 'Hi,');
-    result = result.replace(/Dear\s+\{\{\s*name\s*\}\}/gi, 'Dear customer,');
+    result = result.replace(/Hello\s+\{\{\s*name\s*\}\}/gi, "Hello,");
+    result = result.replace(/Hi\s+\{\{\s*name\s*\}\}/gi, "Hi,");
+    result = result.replace(/Dear\s+\{\{\s*name\s*\}\}/gi, "Dear customer,");
   }
 
   // Generic placeholder replacement {{ any_key }}
-  result = result.replace(/\{\{\s*([a-zA-Z0-9_\-]+)\s*\}\}/g, (match, placeholderKey) => {
-    const val = getValue(placeholderKey);
-    if (val) return val;
-    if (placeholderKey.toLowerCase() === 'name') return '';
-    return match;
-  });
+  result = result.replace(
+    /\{\{\s*([a-zA-Z0-9_\-]+)\s*\}\}/g,
+    (match, placeholderKey) => {
+      const val = getValue(placeholderKey);
+      if (val) return val;
+      if (placeholderKey.toLowerCase() === "name") return "";
+      return match;
+    },
+  );
 
   // Append signature if provided and not already present
   if (defaultSignature && defaultSignature.trim().length > 0) {
@@ -182,7 +191,7 @@ function renderTemplate(template, rowData = {}, defaultSignature = '') {
  * @returns {string} Formatted timestamp.
  */
 function formatTimestamp(date = new Date()) {
-  const pad = (n) => String(n).padStart(2, '0');
+  const pad = (n) => String(n).padStart(2, "0");
   const yyyy = date.getFullYear();
   const mm = pad(date.getMonth() + 1);
   const dd = pad(date.getDate());
@@ -200,14 +209,14 @@ function formatTimestamp(date = new Date()) {
 function escapeCsvValue(val) {
   if (val === null || val === undefined) return '""';
   const str = String(val).replace(/"/g, '""');
-  if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+  if (str.includes(",") || str.includes("\n") || str.includes('"')) {
     return `"${str}"`;
   }
   return str;
 }
 
 // Export for ES modules / service worker context if supported
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     validateEmail,
     sleep,
@@ -219,6 +228,6 @@ if (typeof module !== 'undefined' && module.exports) {
     base64PayloadToFile,
     renderTemplate,
     formatTimestamp,
-    escapeCsvValue
+    escapeCsvValue,
   };
 }

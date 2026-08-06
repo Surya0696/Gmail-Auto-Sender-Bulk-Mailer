@@ -5,17 +5,17 @@
 
 const DEFAULT_SETTINGS = {
   dailyLimit: 500,
-  delayPreset: '15-25',
+  delayPreset: "15-25",
   minDelay: 15,
   maxDelay: 25,
   retryCount: 1,
-  signature: '',
+  signature: "",
   randomDelay: true,
-  darkMode: true
+  darkMode: true,
 };
 
 const DEFAULT_CAMPAIGN_STATE = {
-  status: 'IDLE', // 'IDLE', 'RUNNING', 'PAUSED', 'STOPPED', 'COMPLETED'
+  status: "IDLE", // 'IDLE', 'RUNNING', 'PAUSED', 'STOPPED', 'COMPLETED'
   currentIndex: 0,
   total: 0,
   sentCount: 0,
@@ -23,22 +23,21 @@ const DEFAULT_CAMPAIGN_STATE = {
   skippedCount: 0,
   currentRecipient: null,
   startTime: null,
-  estimatedTimeRemaining: '00:00',
-  lastUpdated: Date.now()
+  estimatedTimeRemaining: "00:00",
+  lastUpdated: Date.now(),
 };
 
 /**
  * Storage wrapper module providing promise-based access to chrome.storage.local.
  */
 const StorageManager = {
-
   /**
    * Retrieves user settings from chrome.storage.local.
    * @returns {Promise<Object>} Settings object merged with defaults.
    */
   async getSettings() {
     return new Promise((resolve) => {
-      chrome.storage.local.get(['settings'], (result) => {
+      chrome.storage.local.get(["settings"], (result) => {
         resolve({ ...DEFAULT_SETTINGS, ...(result.settings || {}) });
       });
     });
@@ -76,8 +75,15 @@ const StorageManager = {
    */
   async getCampaign() {
     return new Promise((resolve) => {
-      chrome.storage.local.get(['campaignData'], (result) => {
-        resolve(result.campaignData || { recipients: [], subject: '', body: '', attachment: null });
+      chrome.storage.local.get(["campaignData"], (result) => {
+        resolve(
+          result.campaignData || {
+            recipients: [],
+            subject: "",
+            body: "",
+            attachment: null,
+          },
+        );
       });
     });
   },
@@ -103,7 +109,7 @@ const StorageManager = {
    */
   async getState() {
     return new Promise((resolve) => {
-      chrome.storage.local.get(['campaignState'], (result) => {
+      chrome.storage.local.get(["campaignState"], (result) => {
         resolve({ ...DEFAULT_CAMPAIGN_STATE, ...(result.campaignState || {}) });
       });
     });
@@ -115,9 +121,12 @@ const StorageManager = {
    */
   async resetState() {
     return new Promise((resolve) => {
-      chrome.storage.local.set({ campaignState: DEFAULT_CAMPAIGN_STATE }, () => {
-        resolve(DEFAULT_CAMPAIGN_STATE);
-      });
+      chrome.storage.local.set(
+        { campaignState: DEFAULT_CAMPAIGN_STATE },
+        () => {
+          resolve(DEFAULT_CAMPAIGN_STATE);
+        },
+      );
     });
   },
 
@@ -127,7 +136,7 @@ const StorageManager = {
    */
   async getLogs() {
     return new Promise((resolve) => {
-      chrome.storage.local.get(['logs'], (result) => {
+      chrome.storage.local.get(["logs"], (result) => {
         resolve(result.logs || []);
       });
     });
@@ -143,10 +152,10 @@ const StorageManager = {
     const newEntry = {
       id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       timestamp: formatTimestamp(new Date()),
-      recipient: logEntry.recipient || 'Unknown',
-      subject: logEntry.subject || 'No Subject',
-      status: logEntry.status || 'waiting', // 'sent', 'failed', 'waiting', 'skipped'
-      error: logEntry.error || null
+      recipient: logEntry.recipient || "Unknown",
+      subject: logEntry.subject || "No Subject",
+      status: logEntry.status || "waiting", // 'sent', 'failed', 'waiting', 'skipped'
+      error: logEntry.error || null,
     };
     logs.unshift(newEntry);
     const trimmedLogs = logs.slice(0, 1000);
@@ -173,7 +182,7 @@ const StorageManager = {
    */
   async getSentHistory() {
     return new Promise((resolve) => {
-      chrome.storage.local.get(['sentHistory'], (result) => {
+      chrome.storage.local.get(["sentHistory"], (result) => {
         resolve(result.sentHistory || []);
       });
     });
@@ -205,10 +214,10 @@ const StorageManager = {
     if (!email) return false;
     const history = await this.getSentHistory();
     return history.includes(email.trim().toLowerCase());
-  }
+  },
 };
 
 // Export object for environment support
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = StorageManager;
 }

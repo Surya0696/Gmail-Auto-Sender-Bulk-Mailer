@@ -46,11 +46,13 @@ d:/email/
 ## 🚀 Installation Guide
 
 ### 1. Enable Developer Mode in Chrome
+
 1. Open Google Chrome.
 2. Navigate to `chrome://extensions/` in the address bar.
 3. Toggle the **Developer mode** switch in the top-right corner to **ON**.
 
 ### 2. Load Unpacked Extension
+
 1. Click the **Load unpacked** button in the top-left corner.
 2. Browse to and select the extension directory (`d:\email`).
 3. The **Gmail Auto Sender - Bulk Mailer** icon will appear in your Chrome extensions bar.
@@ -60,6 +62,7 @@ d:/email/
 ## 📄 CSV Format & Placeholder Instructions
 
 ### Sample CSV (With Name & Role):
+
 ```csv
 email,name,role,company
 john@example.com,John,Software Engineer,Acme Corp
@@ -68,10 +71,12 @@ sarah@example.com,Sarah,UI/UX Designer,DesignHub
 ```
 
 ### Placeholder Usage:
+
 - `Subject`: `Application for {{role}} - {{name}}`
 - `Body`: `Hello {{name}},\n\nPlease find attached my resume for the {{role}} position at {{company}}.\n\nBest regards,`
 
 #### Smart Fallback Rules:
+
 - If `name` is present: `Hello {{name}}` -> `Hello John`
 - If `name` is missing: `Hello {{name}}` -> `Hello,`
 
@@ -80,11 +85,13 @@ sarah@example.com,Sarah,UI/UX Designer,DesignHub
 ## 📊 Managing Failed Emails
 
 ### 1. Export Failed Mail List
+
 - Open the extension popup and go to the **Logs** tab (or check the Live Progress card when failures occur).
 - Click **❌ Export Failed CSV**.
 - The extension will instantly generate and download `failed_emails_list_<timestamp>.csv` containing the failed email addresses, failure timestamps, and exact diagnostic reasons.
 
 ### 2. Retry Failed Emails
+
 - Click **🔄 Retry Failed Emails**.
 - The extension automatically creates a new queue containing **only** the failed recipients.
 - Click **🚀 Start Sending** to retry sending to those recipients.
@@ -112,9 +119,6 @@ sarah@example.com,Sarah,UI/UX Designer,DesignHub
 1. **Recommended Delay**: Use `15-25 seconds` or higher between emails.
 2. **Daily Sending Limits**: Free Gmail (max 500 emails/day), Workspace (max 2,000 emails/day).
 
+## Create by Surya P R
 
-## Create by Surya P R 
-
-
-
-## Thank You 
+## Thank You

@@ -10,83 +10,88 @@ const GMAIL_SELECTORS = {
     'div[role="button"][gh="cm"]',
     'div[role="button"][aria-label*="Compose"]',
     'div[aria-label*="Compose"]',
-    'div.T-I.J-J5-Ji.T-I-KE.L3',
-    '.z0 > div'
+    "div.T-I.J-J5-Ji.T-I-KE.L3",
+    ".z0 > div",
   ],
   composeWindow: [
     'div[role="dialog"][aria-label*="New Message"]',
     'div[role="dialog"]',
-    'div.M9',
-    'div.nH.if'
+    "div.M9",
+    "div.nH.if",
   ],
   toField: [
-    'input[peoplekit-inputpath]',
-    'div[peoplekit-inputpath] input',
+    "input[peoplekit-inputpath]",
+    "div[peoplekit-inputpath] input",
     'input[aria-label*="To recipients"]',
     'input[aria-label*="To"]',
     'input[aria-label*="Recipients"]',
     'textarea[name="to"]',
-    'input.agP.vO',
-    'input.agP',
+    "input.agP.vO",
+    "input.agP",
     'div[aria-label*="To"] input',
     'div[aria-label*="Recipients"] input',
     'div[role="combobox"] input',
-    'td.a1 input'
+    "td.a1 input",
   ],
   subjectField: [
     'input[name="subjectbox"]',
     'input[placeholder*="Subject"]',
-    'input[aria-label*="Subject"]'
+    'input[aria-label*="Subject"]',
   ],
   bodyField: [
     'div[aria-label*="Message Body"]',
     'div[role="textbox"][aria-label*="Message Body"]',
-    'div.Am.Al.editable',
-    'div[contenteditable="true"]'
+    "div.Am.Al.editable",
+    'div[contenteditable="true"]',
   ],
   attachmentInput: [
     'input[type="file"][name="Filedata"]',
     'input[type="file"][aria-label*="Attach"]',
-    'input[type="file"]'
+    'input[type="file"]',
   ],
   sendButton: [
-    'div.aoO',
+    "div.aoO",
     'div[role="button"][data-tooltip*="Send"]',
     'div[role="button"][aria-label*="Send"]',
     'div[aria-label*="Send"]',
-    'div.T-I.J-J5-Ji.aoO'
+    "div.T-I.J-J5-Ji.aoO",
   ],
   discardButton: [
     'div[role="button"][data-tooltip*="Discard draft"]',
     'div[role="button"][aria-label*="Discard draft"]',
     'div[data-tooltip*="Discard"]',
     'div[aria-label*="Discard"]',
-    'div.oh.aY9',
-    'div.og',
-    'img.ha',
+    "div.oh.aY9",
+    "div.og",
+    "img.ha",
     'img[aria-label*="Save & close"]',
-    'div[aria-label*="Close"]'
+    'div[aria-label*="Close"]',
   ],
   sentToast: [
-    'span.bAq', // Standard Gmail "Message sent" toast text element
-    'div[role="alert"]'
-  ]
+    "span.bAq", // Standard Gmail "Message sent" toast text element
+    'div[role="alert"]',
+  ],
 };
 
 /**
  * Message listener for extension communication from Background Service Worker or Popup.
  */
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'PING') {
+  if (request.action === "PING") {
     const isReady = checkGmailLoaded();
-    sendResponse({ success: isReady, status: isReady ? 'ready' : 'not_ready' });
+    sendResponse({ success: isReady, status: isReady ? "ready" : "not_ready" });
     return true;
   }
 
-  if (request.action === 'SEND_SINGLE_EMAIL') {
+  if (request.action === "SEND_SINGLE_EMAIL") {
     handleSendEmail(request.payload)
       .then((result) => sendResponse(result))
-      .catch((err) => sendResponse({ success: false, error: err.message || 'Unknown error occurred' }));
+      .catch((err) =>
+        sendResponse({
+          success: false,
+          error: err.message || "Unknown error occurred",
+        }),
+      );
     return true; // Keep response channel open for async execution
   }
 });
@@ -134,11 +139,14 @@ async function handleSendEmail(payload) {
   const { recipientEmail, subject, body, attachment } = payload;
 
   if (!navigator.onLine) {
-    return { success: false, error: 'Internet disconnected' };
+    return { success: false, error: "Internet disconnected" };
   }
 
   if (!checkGmailLoaded()) {
-    return { success: false, error: 'Gmail interface not loaded or user logged out' };
+    return {
+      success: false,
+      error: "Gmail interface not loaded or user logged out",
+    };
   }
 
   try {
@@ -149,7 +157,7 @@ async function handleSendEmail(payload) {
     // Step 2: Open a Brand New Compose Window
     const composeWindow = await openComposeWindow();
     if (!composeWindow) {
-      return { success: false, error: 'Failed to open Gmail compose window' };
+      return { success: false, error: "Failed to open Gmail compose window" };
     }
 
     await sleep(500);
@@ -158,7 +166,10 @@ async function handleSendEmail(payload) {
     const toFilled = await fillToField(composeWindow, recipientEmail);
     if (!toFilled) {
       await closeAllComposeWindows();
-      return { success: false, error: 'Could not set recipient "To" address field' };
+      return {
+        success: false,
+        error: 'Could not set recipient "To" address field',
+      };
     }
 
     await sleep(400);
@@ -189,16 +200,21 @@ async function handleSendEmail(payload) {
     // Step 7: Click Send Button and verify window closed
     const sent = await clickSendButton(composeWindow);
     if (!sent) {
-      return { success: false, error: 'Failed to send email or click Send button' };
+      return {
+        success: false,
+        error: "Failed to send email or click Send button",
+      };
     }
 
     await sleep(1000);
     return { success: true };
-
   } catch (err) {
-    console.error('[Gmail Auto Sender] Error sending email:', err);
+    console.error("[Gmail Auto Sender] Error sending email:", err);
     await closeAllComposeWindows();
-    return { success: false, error: err.message || 'Automation sequence failed' };
+    return {
+      success: false,
+      error: err.message || "Automation sequence failed",
+    };
   }
 }
 
@@ -220,11 +236,13 @@ async function closeAllComposeWindows() {
         }
       }
       if (!closed) {
-        try { dialog.remove(); } catch (e) {}
+        try {
+          dialog.remove();
+        } catch (e) {}
       }
     }
   } catch (e) {
-    console.warn('[Gmail Auto Sender] Error clearing old compose windows:', e);
+    console.warn("[Gmail Auto Sender] Error clearing old compose windows:", e);
   }
   await sleep(300);
 }
@@ -242,7 +260,9 @@ async function openComposeWindow() {
   if (composeBtn) {
     simulateClick(composeBtn);
   } else {
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'c', keyCode: 67, bubbles: true }));
+    document.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "c", keyCode: 67, bubbles: true }),
+    );
   }
 
   const startTime = Date.now();
@@ -266,11 +286,15 @@ async function fillToField(container, email) {
 
   // Retry loop for up to 5 seconds while Gmail renders recipient DOM
   while (Date.now() - startTime < 5000) {
-    toInput = findFirstElement(GMAIL_SELECTORS.toField, container) || findFirstElement(GMAIL_SELECTORS.toField);
+    toInput =
+      findFirstElement(GMAIL_SELECTORS.toField, container) ||
+      findFirstElement(GMAIL_SELECTORS.toField);
     if (toInput) break;
 
     // Trigger click on recipient wrapper if present to activate input
-    const toWrapper = (container || document).querySelector('div[aria-label*="To"], div[aria-label*="Recipients"], div[peoplekit-inputpath], td.a1, div.vO');
+    const toWrapper = (container || document).querySelector(
+      'div[aria-label*="To"], div[aria-label*="Recipients"], div[peoplekit-inputpath], td.a1, div.vO',
+    );
     if (toWrapper) {
       simulateClick(toWrapper);
     }
@@ -283,20 +307,34 @@ async function fillToField(container, email) {
   simulateClick(toInput);
   await sleep(150);
 
-  if ('value' in toInput) {
+  if ("value" in toInput) {
     toInput.value = email;
   } else {
     toInput.textContent = email;
   }
 
-  toInput.dispatchEvent(new Event('input', { bubbles: true }));
-  toInput.dispatchEvent(new Event('change', { bubbles: true }));
+  toInput.dispatchEvent(new Event("input", { bubbles: true }));
+  toInput.dispatchEvent(new Event("change", { bubbles: true }));
 
   await sleep(200);
 
-  toInput.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 13, which: 13, bubbles: true }));
-  toInput.dispatchEvent(new KeyboardEvent('keydown', { key: ',', keyCode: 188, which: 188, bubbles: true }));
-  toInput.dispatchEvent(new Event('blur', { bubbles: true }));
+  toInput.dispatchEvent(
+    new KeyboardEvent("keydown", {
+      key: "Enter",
+      keyCode: 13,
+      which: 13,
+      bubbles: true,
+    }),
+  );
+  toInput.dispatchEvent(
+    new KeyboardEvent("keydown", {
+      key: ",",
+      keyCode: 188,
+      which: 188,
+      bubbles: true,
+    }),
+  );
+  toInput.dispatchEvent(new Event("blur", { bubbles: true }));
 
   return true;
 }
@@ -305,17 +343,19 @@ async function fillToField(container, email) {
  * Populates the Subject field.
  */
 async function fillSubjectField(container, subject) {
-  const subjectInput = findFirstElement(GMAIL_SELECTORS.subjectField, container) || findFirstElement(GMAIL_SELECTORS.subjectField);
+  const subjectInput =
+    findFirstElement(GMAIL_SELECTORS.subjectField, container) ||
+    findFirstElement(GMAIL_SELECTORS.subjectField);
   if (!subjectInput) return false;
 
   subjectInput.focus();
   simulateClick(subjectInput);
   await sleep(100);
 
-  subjectInput.value = '';
+  subjectInput.value = "";
   subjectInput.value = subject;
-  subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
-  subjectInput.dispatchEvent(new Event('change', { bubbles: true }));
+  subjectInput.dispatchEvent(new Event("input", { bubbles: true }));
+  subjectInput.dispatchEvent(new Event("change", { bubbles: true }));
   return true;
 }
 
@@ -323,7 +363,9 @@ async function fillSubjectField(container, subject) {
  * Populates the contenteditable message body field.
  */
 async function fillBodyField(container, body) {
-  const bodyInput = findFirstElement(GMAIL_SELECTORS.bodyField, container) || findFirstElement(GMAIL_SELECTORS.bodyField);
+  const bodyInput =
+    findFirstElement(GMAIL_SELECTORS.bodyField, container) ||
+    findFirstElement(GMAIL_SELECTORS.bodyField);
   if (!bodyInput) return false;
 
   bodyInput.focus();
@@ -331,18 +373,18 @@ async function fillBodyField(container, body) {
   await sleep(150);
 
   // Clear existing content to prevent body text concatenation
-  bodyInput.innerHTML = '';
+  bodyInput.innerHTML = "";
 
-  const htmlBody = body.replace(/\n/g, '<br>');
+  const htmlBody = body.replace(/\n/g, "<br>");
 
   try {
-    document.execCommand('insertHTML', false, htmlBody);
+    document.execCommand("insertHTML", false, htmlBody);
   } catch (e) {
     bodyInput.innerHTML = htmlBody;
   }
 
-  bodyInput.dispatchEvent(new Event('input', { bubbles: true }));
-  bodyInput.dispatchEvent(new Event('change', { bubbles: true }));
+  bodyInput.dispatchEvent(new Event("input", { bubbles: true }));
+  bodyInput.dispatchEvent(new Event("change", { bubbles: true }));
   return true;
 }
 
@@ -355,7 +397,9 @@ async function fillBodyField(container, body) {
 async function attachFileToCompose(container, attachmentPayload) {
   try {
     // Check if attachment chip is already present to prevent duplicate attachments
-    const existingChips = container.querySelectorAll('div[aria-label*="Attachment"], div.vI, div.aV, div[role="listitem"]');
+    const existingChips = container.querySelectorAll(
+      'div[aria-label*="Attachment"], div.vI, div.aV, div[role="listitem"]',
+    );
     if (existingChips && existingChips.length > 0) {
       return true;
     }
@@ -363,17 +407,19 @@ async function attachFileToCompose(container, attachmentPayload) {
     const file = base64PayloadToFile(attachmentPayload);
     if (!file) return false;
 
-    let fileInput = findFirstElement(GMAIL_SELECTORS.attachmentInput, container) || findFirstElement(GMAIL_SELECTORS.attachmentInput);
+    let fileInput =
+      findFirstElement(GMAIL_SELECTORS.attachmentInput, container) ||
+      findFirstElement(GMAIL_SELECTORS.attachmentInput);
     if (!fileInput) return false;
 
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
     fileInput.files = dataTransfer.files;
 
-    fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    fileInput.dispatchEvent(new Event("change", { bubbles: true }));
     return true;
   } catch (err) {
-    console.error('[Gmail Auto Sender] Attachment error:', err);
+    console.error("[Gmail Auto Sender] Attachment error:", err);
     return false;
   }
 }
@@ -385,10 +431,11 @@ async function clickSendButton(container) {
   if (!container || !document.contains(container)) return false;
 
   // 1. Target native Gmail blue Send button (div.aoO) specifically
-  let sendBtn = container.querySelector('div.aoO') ||
-                container.querySelector('div[role="button"][data-tooltip*="Send"]') ||
-                container.querySelector('div[role="button"][aria-label*="Send"]') ||
-                findFirstElement(GMAIL_SELECTORS.sendButton, container);
+  let sendBtn =
+    container.querySelector("div.aoO") ||
+    container.querySelector('div[role="button"][data-tooltip*="Send"]') ||
+    container.querySelector('div[role="button"][aria-label*="Send"]') ||
+    findFirstElement(GMAIL_SELECTORS.sendButton, container);
 
   if (sendBtn) {
     simulateClick(sendBtn);
@@ -398,19 +445,19 @@ async function clickSendButton(container) {
   const bodyInput = findFirstElement(GMAIL_SELECTORS.bodyField, container);
   if (bodyInput) {
     bodyInput.focus();
-    const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+    const isMac = navigator.platform.toUpperCase().indexOf("MAC") >= 0;
     const eventOpts = {
-      key: 'Enter',
-      code: 'Enter',
+      key: "Enter",
+      code: "Enter",
       keyCode: 13,
       which: 13,
       ctrlKey: !isMac,
       metaKey: isMac,
       bubbles: true,
-      cancelable: true
+      cancelable: true,
     };
-    bodyInput.dispatchEvent(new KeyboardEvent('keydown', eventOpts));
-    bodyInput.dispatchEvent(new KeyboardEvent('keyup', eventOpts));
+    bodyInput.dispatchEvent(new KeyboardEvent("keydown", eventOpts));
+    bodyInput.dispatchEvent(new KeyboardEvent("keyup", eventOpts));
   }
 
   // 3. Wait up to 5 seconds to verify compose dialog disappears from screen
@@ -423,7 +470,9 @@ async function clickSendButton(container) {
   }
 
   // 4. Retry click if window is still open
-  sendBtn = container.querySelector('div.aoO') || findFirstElement(GMAIL_SELECTORS.sendButton, container);
+  sendBtn =
+    container.querySelector("div.aoO") ||
+    findFirstElement(GMAIL_SELECTORS.sendButton, container);
   if (sendBtn) {
     simulateClick(sendBtn);
     await sleep(1500);
@@ -433,7 +482,9 @@ async function clickSendButton(container) {
   }
 
   // If send failed, discard the draft so it doesn't linger or duplicate
-  console.warn('[Gmail Auto Sender] Send action failed to close compose window. Discarding draft...');
+  console.warn(
+    "[Gmail Auto Sender] Send action failed to close compose window. Discarding draft...",
+  );
   await closeAllComposeWindows();
   return false;
 }
@@ -444,7 +495,7 @@ async function clickSendButton(container) {
 function simulateClick(element) {
   if (!element) return;
   const opts = { bubbles: true, cancelable: true, view: window };
-  element.dispatchEvent(new MouseEvent('mousedown', opts));
-  element.dispatchEvent(new MouseEvent('mouseup', opts));
-  element.dispatchEvent(new MouseEvent('click', opts));
+  element.dispatchEvent(new MouseEvent("mousedown", opts));
+  element.dispatchEvent(new MouseEvent("mouseup", opts));
+  element.dispatchEvent(new MouseEvent("click", opts));
 }
